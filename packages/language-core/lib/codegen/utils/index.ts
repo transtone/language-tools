@@ -6,24 +6,7 @@ import type { Code, SfcBlock, SfcBlockAttr, VueCodeInformation } from '../../typ
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
-export const variableNameRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
-
-export function* wrapWith(
-	startOffset: number,
-	endOffset: number,
-	features: VueCodeInformation,
-	...wrapCodes: Code[]
-): Generator<Code> {
-	yield ['', 'template', startOffset, features];
-	let offset = 1;
-	for (const wrapCode of wrapCodes) {
-		if (typeof wrapCode !== 'string') {
-			offset++;
-		}
-		yield wrapCode;
-	}
-	yield ['', 'template', endOffset, { __combineOffset: offset }];
-}
+export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
 export function collectVars(
 	ts: typeof import('typescript'),

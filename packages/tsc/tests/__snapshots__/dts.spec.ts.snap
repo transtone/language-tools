@@ -90,9 +90,9 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         readonly "onUpdate:title"?: (value: string) => any;
         readonly onBar?: (data: number) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onUpdate:title" | "onBar"> & ({
-        title?: string;
-    } & {
         foo: number;
+    } & {
+        title?: string;
     }) & Partial<{}>> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
@@ -120,9 +120,9 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
         readonly "onUpdate:title"?: (value: string) => any;
         readonly onBar?: (data: number) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onUpdate:title" | "onBar"> & ({
-        title?: string;
-    } & {
         foo: number;
+    } & {
+        title?: string;
     }) & Partial<{}>> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
@@ -299,20 +299,29 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
 "type __VLS_PublicProps = {
-    "foo"?: number;
-    "bar"?: string[];
-    "qux"?: string;
-    'quxModifiers'?: Partial<Record<'lazy' | 'trim', true>>;
+    /**
+     * required number modelValue
+     */
+    modelValue: number;
+    /**
+     * optional boolean foo with default false
+     */
+    'foo'?: boolean;
+    /**
+     * optional string bar with lazy and trim modifiers
+     */
+    'bar'?: string;
+    'barModifiers'?: Partial<Record<'lazy' | 'trim', true>>;
 };
 declare const _default: import("vue").DefineComponent<__VLS_PublicProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    "update:foo": (value: number) => any;
-    "update:bar": (value: string[]) => any;
-    "update:qux": (value: string) => any;
+    "update:modelValue": (value: number) => any;
+    "update:foo": (value: boolean) => any;
+    "update:bar": (value: string) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_PublicProps> & Readonly<{
-    "onUpdate:foo"?: (value: number) => any;
-    "onUpdate:bar"?: (value: string[]) => any;
-    "onUpdate:qux"?: (value: string) => any;
-}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+    "onUpdate:modelValue"?: (value: number) => any;
+    "onUpdate:foo"?: (value: boolean) => any;
+    "onUpdate:bar"?: (value: string) => any;
+}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;
 "
 `;

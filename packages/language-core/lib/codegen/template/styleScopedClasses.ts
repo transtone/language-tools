@@ -3,8 +3,12 @@ import type * as ts from 'typescript';
 import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code } from '../../types';
 import { endOfLine, normalizeAttributeValue } from '../utils';
+import { generateEscaped } from '../utils/escaped';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
+
+const classNameEscapeRegex = /([\\'])/;
 
 export function* generateStyleScopedClassReferences(
 	ctx: TemplateCodegenContext,
@@ -22,63 +26,22 @@ export function* generateStyleScopedClassReferences(
 	}
 	for (const { source, className, offset } of ctx.scopedClasses) {
 		yield `/** @type {__VLS_StyleScopedClasses[`;
-		yield [
-			'',
-			source,
+		yield* wrapWith(
 			offset - (withDot ? 1 : 0),
-			ctx.codeFeatures.navigation,
-		];
-		yield `'`;
-
-		// fix https://github.com/vuejs/language-tools/issues/4537
-		yield* escapeString(source, className, offset, ['\\', '\'']);
-		yield `'`;
-		yield [
-			'',
-			source,
 			offset + className.length,
+			source,
 			ctx.codeFeatures.navigation,
-		];
+			`'`,
+			...generateEscaped(
+				className,
+				source,
+				offset,
+				ctx.codeFeatures.navigationAndAdditionalCompletion,
+				classNameEscapeRegex
+			),
+			`'`
+		);
 		yield `]} */${endOfLine}`;
-	}
-
-	function* escapeString(source: string, className: string, offset: number, escapeTargets: string[]): Generator<Code> {
-		let count = 0;
-
-		const currentEscapeTargets = [...escapeTargets];
-		const firstEscapeTarget = currentEscapeTargets.shift()!;
-		const splitted = className.split(firstEscapeTarget);
-
-		for (let i = 0; i < splitted.length; i++) {
-			const part = splitted[i];
-			const partLength = part.length;
-
-			if (escapeTargets.length > 0) {
-				yield* escapeString(source, part, offset + count, [...currentEscapeTargets]);
-			} else {
-				yield [
-					part,
-					source,
-					offset + count,
-					ctx.codeFeatures.navigationAndAdditionalCompletion,
-				];
-			}
-
-			if (i !== splitted.length - 1) {
-				yield '\\';
-
-				yield [
-					firstEscapeTarget,
-					source,
-					offset + count + partLength,
-					ctx.codeFeatures.navigationAndAdditionalCompletion,
-				];
-
-				count += partLength + 1;
-			} else {
-				count += partLength;
-			}
-		}
 	}
 }
 

@@ -6,9 +6,10 @@ import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import { newLine, variableNameRegex, wrapWith } from '../utils';
+import { identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generateModifiers } from './elementDirectives';
 import { generateEventArg, generateEventExpression } from './elementEvents';
@@ -117,7 +118,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codes = wrapWith(
+			const codes = [...wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
@@ -135,7 +136,7 @@ export function* generateElementProps(
 						: wrapWith(
 							prop.loc.start.offset,
 							prop.loc.start.offset + 'v-model'.length,
-							ctx.codeFeatures.verification,
+							ctx.codeFeatures.withoutHighlightAndCompletion,
 							propName
 						)
 				),
@@ -148,12 +149,12 @@ export function* generateElementProps(
 					ctx.codeFeatures.all,
 					enableCodeFeatures
 				)
-			);
+			)];
 			if (enableCodeFeatures) {
 				yield* codes;
 			}
 			else {
-				yield toString([...codes]);
+				yield toString(codes);
 			}
 			if (shouldSpread) {
 				yield ` }`;
@@ -166,17 +167,17 @@ export function* generateElementProps(
 						? `[__VLS_tryAsConstant(\`$\{${prop.arg.content}\}Modifiers\`)]`
 						: camelize(propName) + `Modifiers`
 					: `modelModifiers`;
-				const codes = generateModifiers(
+				const codes = [...generateModifiers(
 					options,
 					ctx,
 					prop,
 					propertyName
-				);
+				)];
 				if (enableCodeFeatures) {
 					yield* codes;
 				}
 				else {
-					yield toString([...codes]);
+					yield toString(codes);
 				}
 				yield newLine;
 			}
@@ -201,7 +202,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codes = wrapWith(
+			const codes = [...wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
@@ -220,12 +221,12 @@ export function* generateElementProps(
 						? generateAttrValue(prop.value, ctx.codeFeatures.withoutNavigation)
 						: [`true`]
 				)
-			);
+			)];
 			if (enableCodeFeatures) {
 				yield* codes;
 			}
 			else {
-				yield toString([...codes]);
+				yield toString(codes);
 			}
 			if (shouldSpread) {
 				yield ` }`;
@@ -244,7 +245,7 @@ export function* generateElementProps(
 				}
 			}
 			else {
-				const codes = wrapWith(
+				const codes = [...wrapWith(
 					prop.exp.loc.start.offset,
 					prop.exp.loc.end.offset,
 					ctx.codeFeatures.verification,
@@ -257,12 +258,12 @@ export function* generateElementProps(
 						ctx.codeFeatures.all,
 						enableCodeFeatures
 					)
-				);
+				)];
 				if (enableCodeFeatures) {
 					yield* codes;
 				}
 				else {
-					yield toString([...codes]);
+					yield toString(codes);
 				}
 				yield `,${newLine}`;
 			}
@@ -303,12 +304,13 @@ export function* generatePropExp(
 		else {
 			const propVariableName = camelize(exp.loc.source);
 
-			if (variableNameRegex.test(propVariableName)) {
+			if (identifierRegex.test(propVariableName)) {
 				const isDestructuredProp = options.destructuredPropNames?.has(propVariableName) ?? false;
 				const isTemplateRef = options.templateRefNames?.has(propVariableName) ?? false;
 
 				const codes = generateCamelized(
 					exp.loc.source,
+					'template',
 					exp.loc.start.offset,
 					features
 				);

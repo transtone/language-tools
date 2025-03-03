@@ -17,6 +17,7 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 
 export interface VueCodeInformation extends CodeInformation {
 	__combineOffset?: number;
+	__linkedToken?: symbol;
 }
 
 export type Code = Segment<VueCodeInformation>;
@@ -28,6 +29,7 @@ export interface VueCompilerOptions {
 	vitePressExtensions: string[];
 	petiteVueExtensions: string[];
 	jsxSlots: boolean;
+	strictVModel: boolean;
 	checkUnknownProps: boolean;
 	checkUnknownEvents: boolean;
 	checkUnknownDirectives: boolean;

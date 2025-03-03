@@ -3,8 +3,9 @@ import { camelize, capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
 import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import { endOfLine, newLine, normalizeAttributeValue, variableNameRegex, wrapWith } from '../utils';
+import { endOfLine, identifierRegex, newLine, normalizeAttributeValue } from '../utils';
 import { generateCamelized } from '../utils/camelized';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import { generateElementDirectives } from './elementDirectives';
@@ -99,6 +100,7 @@ export function* generateComponent(
 				const shouldCapitalize = matchImportName[0].toUpperCase() === matchImportName[0];
 				yield* generateCamelized(
 					shouldCapitalize ? capitalize(node.tag) : node.tag,
+					'template',
 					tagOffset,
 					{
 						...ctx.codeFeatures.withoutHighlightAndCompletion,
@@ -164,7 +166,7 @@ export function* generateComponent(
 		yield `${endOfLine}`;
 
 		const camelizedTag = camelize(node.tag);
-		if (variableNameRegex.test(camelizedTag)) {
+		if (identifierRegex.test(camelizedTag)) {
 			// navigation support
 			yield `/** @type {[`;
 			for (const tagOffset of tagOffsets) {
@@ -173,6 +175,7 @@ export function* generateComponent(
 					yield `typeof __VLS_components.`;
 					yield* generateCamelized(
 						shouldCapitalize ? capitalize(node.tag) : node.tag,
+						'template',
 						tagOffset,
 						{
 							navigation: {
@@ -190,6 +193,7 @@ export function* generateComponent(
 				yield `// @ts-ignore${newLine}`; // #2304
 				yield* generateCamelized(
 					capitalize(node.tag),
+					'template',
 					tagOffsets[0],
 					{
 						completion: {
@@ -403,7 +407,7 @@ function* generateFailedPropExps(
 }
 
 function getCanonicalComponentName(tagText: string) {
-	return variableNameRegex.test(tagText)
+	return identifierRegex.test(tagText)
 		? tagText
 		: capitalize(camelize(tagText.replace(colonReg, '-')));
 }
@@ -423,12 +427,13 @@ function getPossibleOriginalComponentNames(tagText: string, deduplicate: boolean
 }
 
 function* generateCanonicalComponentName(tagText: string, offset: number, features: VueCodeInformation): Generator<Code> {
-	if (variableNameRegex.test(tagText)) {
+	if (identifierRegex.test(tagText)) {
 		yield [tagText, 'template', offset, features];
 	}
 	else {
 		yield* generateCamelized(
 			capitalize(tagText.replace(colonReg, '-')),
+			'template',
 			offset,
 			features
 		);
@@ -482,7 +487,7 @@ function* generateElementReference(
 			);
 			yield `} */${endOfLine}`;
 
-			if (variableNameRegex.test(content) && !options.templateRefNames.has(content)) {
+			if (identifierRegex.test(content) && !options.templateRefNames.has(content)) {
 				ctx.accessExternalVariable(content, startOffset);
 			}
 

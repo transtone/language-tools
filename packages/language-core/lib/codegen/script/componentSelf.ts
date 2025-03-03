@@ -33,27 +33,19 @@ export function* generateComponentSelf(
 				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
 					continue;
 				}
-				const templateOffset = options.getGeneratedLength();
+
+				const token = Symbol(varName.length);
+				yield ['', undefined, 0, { __linkedToken: token }];
 				yield `${varName}: ${varName} as typeof `;
-
-				const scriptOffset = options.getGeneratedLength();
+				yield ['', undefined, 0, { __linkedToken: token }];
 				yield `${varName},${newLine}`;
-
-				options.linkedCodeMappings.push({
-					sourceOffsets: [scriptOffset],
-					generatedOffsets: [templateOffset],
-					lengths: [varName.length],
-					data: undefined,
-				});
 			}
 		}
 		yield `}${endOfLine}`; // return {
 		yield `},${newLine}`; // setup() {
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
 			const emitOptionCodes = [...generateEmitsOption(options, options.scriptSetupRanges)];
-			for (const code of emitOptionCodes) {
-				yield code;
-			}
+			yield* emitOptionCodes;
 			yield* generatePropsOption(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges, !!emitOptionCodes.length, false);
 		}
 		if (options.sfc.script && options.scriptRanges?.exportDefault?.args) {

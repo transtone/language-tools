@@ -32,22 +32,18 @@ export function* generateVIf(
 		let addedBlockCondition = false;
 
 		if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-			const codes = [
-				...generateInterpolation(
-					options,
-					ctx,
-					'template',
-					ctx.codeFeatures.all,
-					branch.condition.content,
-					branch.condition.loc.start.offset,
-					branch.condition.loc,
-					`(`,
-					`)`
-				),
-			];
-			for (const code of codes) {
-				yield code;
-			}
+			const codes = [...generateInterpolation(
+				options,
+				ctx,
+				'template',
+				ctx.codeFeatures.all,
+				branch.condition.content,
+				branch.condition.loc.start.offset,
+				branch.condition.loc,
+				`(`,
+				`)`
+			)];
+			yield* codes;
 			ctx.blockConditions.push(toString(codes));
 			addedBlockCondition = true;
 			yield ` `;

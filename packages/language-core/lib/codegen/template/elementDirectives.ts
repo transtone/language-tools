@@ -3,9 +3,10 @@ import { camelize } from '@vue/shared';
 import type { Code } from '../../types';
 import { hyphenateAttr } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, wrapWith } from '../utils';
+import { endOfLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
@@ -69,6 +70,7 @@ function* generateIdentifier(
 		`__VLS_directives.`,
 		...generateCamelized(
 			rawName,
+			'template',
 			prop.loc.start.offset,
 			ctx.resolveCodeFeatures({
 				...codeFeatures.withoutHighlight,
