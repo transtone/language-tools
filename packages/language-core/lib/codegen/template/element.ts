@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
 import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, identifierRegex, newLine, normalizeAttributeValue } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -102,13 +103,7 @@ export function* generateComponent(
 					shouldCapitalize ? capitalize(node.tag) : node.tag,
 					'template',
 					tagOffset,
-					{
-						...ctx.codeFeatures.withoutHighlightAndCompletion,
-						navigation: {
-							resolveRenameNewName: camelizeComponentName,
-							resolveRenameEditText: getTagRenameApply(node.tag),
-						},
-					}
+					ctx.codeFeatures.withoutHighlightAndCompletion
 				);
 			}
 			yield `, `;
@@ -171,39 +166,32 @@ export function* generateComponent(
 			yield `/** @type {[`;
 			for (const tagOffset of tagOffsets) {
 				for (const shouldCapitalize of (node.tag[0] === node.tag[0].toUpperCase() ? [false] : [true, false])) {
-					const expectName = shouldCapitalize ? capitalize(camelizedTag) : camelizedTag;
 					yield `typeof __VLS_components.`;
 					yield* generateCamelized(
 						shouldCapitalize ? capitalize(node.tag) : node.tag,
 						'template',
 						tagOffset,
-						{
-							navigation: {
-								resolveRenameNewName: node.tag !== expectName ? camelizeComponentName : undefined,
-								resolveRenameEditText: getTagRenameApply(node.tag),
-							},
-						}
+						codeFeatures.navigation
 					);
 					yield `, `;
 				}
 			}
 			yield `]} */${endOfLine}`;
+
 			// auto import support
-			if (options.edited) {
-				yield `// @ts-ignore${newLine}`; // #2304
-				yield* generateCamelized(
-					capitalize(node.tag),
-					'template',
-					tagOffsets[0],
-					{
-						completion: {
-							isAdditional: true,
-							onlyImport: true,
-						},
-					}
-				);
-				yield `${endOfLine}`;
-			}
+			yield `// @ts-ignore${newLine}`; // #2304
+			yield* generateCamelized(
+				capitalize(node.tag),
+				'template',
+				tagOffsets[0],
+				{
+					completion: {
+						isAdditional: true,
+						onlyImport: true,
+					},
+				}
+			);
+			yield `${endOfLine}`;
 		}
 	}
 	else {
@@ -321,7 +309,7 @@ export function* generateElement(
 		: undefined;
 	const failedPropExps: FailedPropExpression[] = [];
 
-	yield `__VLS_asFunctionalElement(__VLS_intrinsicElements`;
+	yield `__VLS_asFunctionalElement(__VLS_elements`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
@@ -330,7 +318,7 @@ export function* generateElement(
 		ctx.codeFeatures.withoutHighlightAndCompletion
 	);
 	if (endTagOffset !== undefined) {
-		yield `, __VLS_intrinsicElements`;
+		yield `, __VLS_elements`;
 		yield* generatePropertyAccess(
 			options,
 			ctx,
@@ -377,7 +365,7 @@ export function* generateElement(
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
-		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);
+		ctx.inheritedAttrVars.add(`__VLS_elements.${node.tag}`);
 	}
 
 	collectStyleScopedClassReferences(options, ctx, node);
@@ -510,12 +498,4 @@ function hasVBindAttrs(
 			&& prop.exp?.loc.source === '$attrs'
 		)
 	);
-}
-
-function camelizeComponentName(newName: string) {
-	return camelize('-' + newName);
-}
-
-function getTagRenameApply(oldName: string) {
-	return oldName === hyphenateTag(oldName) ? hyphenateTag : undefined;
 }

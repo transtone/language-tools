@@ -1,6 +1,6 @@
-import * as vue from '@vue/language-core';
-import type * as ts from 'typescript';
+import { VueVirtualCode } from '@vue/language-core';
 import type { RequestContext } from './types';
+import { getVariableType } from './utils';
 
 export function getElementAttrs(
 	this: RequestContext,
@@ -9,27 +9,23 @@ export function getElementAttrs(
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
-	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
+	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
 		return;
 	}
+	const vueCode = volarFile.generated.root;
+
 	const program = languageService.getProgram()!;
-
-	let tsSourceFile: ts.SourceFile | undefined;
-	if (tsSourceFile = program.getSourceFile(fileName)) {
-		const checker = program.getTypeChecker();
-		const typeNode = tsSourceFile.statements
-			.filter(ts.isTypeAliasDeclaration)
-			.find(node => node.name.getText() === '__VLS_IntrinsicElementsCompletion');
-
-		if (checker && typeNode) {
-			const type = checker.getTypeFromTypeNode(typeNode.type);
-			const el = type.getProperty(tagName);
-
-			if (el) {
-				const attrs = checker.getTypeOfSymbolAtLocation(el, typeNode).getProperties();
-				return attrs.map(c => c.name);
-			}
-		}
+	const checker = program.getTypeChecker();
+	const elements = getVariableType(ts, languageService, vueCode, '__VLS_elements');
+	if (!elements) {
+		return [];
 	}
-	return [];
+
+	const elementType = elements.type.getProperty(tagName);
+	if (!elementType) {
+		return [];
+	}
+
+	const attrs = checker.getTypeOfSymbol(elementType).getProperties();
+	return attrs.map(c => c.name);
 }

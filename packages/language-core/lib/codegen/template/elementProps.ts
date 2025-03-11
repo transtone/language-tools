@@ -113,7 +113,7 @@ export function* generateElementProps(
 
 			const shouldSpread = propName === 'style' || propName === 'class';
 			const shouldCamelize = isComponent && getShouldCamelize(options, prop, propName);
-			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck, shouldCamelize);
+			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck);
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -141,13 +141,18 @@ export function* generateElementProps(
 						)
 				),
 				`: `,
-				...generatePropExp(
-					options,
-					ctx,
-					prop,
-					prop.exp,
-					ctx.codeFeatures.all,
-					enableCodeFeatures
+				...wrapWith(
+					prop.arg?.loc.start.offset ?? prop.loc.start.offset,
+					prop.arg?.loc.end.offset ?? prop.loc.end.offset,
+					ctx.codeFeatures.verification,
+					...generatePropExp(
+						options,
+						ctx,
+						prop,
+						prop.exp,
+						ctx.codeFeatures.all,
+						enableCodeFeatures
+					)
 				)
 			)];
 			if (enableCodeFeatures) {
@@ -197,7 +202,7 @@ export function* generateElementProps(
 
 			const shouldSpread = prop.name === 'style' || prop.name === 'class';
 			const shouldCamelize = isComponent && getShouldCamelize(options, prop, prop.name);
-			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck, true);
+			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck);
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -378,15 +383,10 @@ function getShouldCamelize(
 
 function getPropsCodeInfo(
 	ctx: TemplateCodegenContext,
-	strictPropsCheck: boolean,
-	shouldCamelize: boolean
+	strictPropsCheck: boolean
 ): VueCodeInformation {
 	return ctx.resolveCodeFeatures({
 		...codeFeatures.withoutHighlightAndCompletion,
-		navigation: {
-			resolveRenameNewName: camelize,
-			resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
-		},
 		verification: strictPropsCheck || {
 			shouldReport(_source, code) {
 				// https://typescript.tv/errors/#ts2353

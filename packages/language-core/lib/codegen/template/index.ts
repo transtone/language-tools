@@ -14,7 +14,6 @@ export interface TemplateCodegenOptions {
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	template: NonNullable<Sfc['template']>;
-	edited: boolean;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
 	destructuredPropNames: Set<string>;
@@ -79,8 +78,7 @@ function* generateSlots(
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
 	if (!options.hasDefineSlots) {
-		const name = getSlotsPropertyName(options.vueCompilerOptions.target);
-		yield `type __VLS_Slots = __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.${name}>`;
+		yield `type __VLS_Slots = {}`;
 		for (const { expVar, propsVar } of ctx.dynamicSlots) {
 			yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
 		}
@@ -106,7 +104,7 @@ function* generateSlots(
 			}
 			yield `?: (props: typeof ${slot.propsVar}) => any }`;
 		}
-		yield `>${endOfLine}`;
+		yield `${endOfLine}`;
 	}
 	return `__VLS_Slots`;
 }
