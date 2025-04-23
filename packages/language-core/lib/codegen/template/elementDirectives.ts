@@ -33,8 +33,6 @@ export function* generateElementDirectives(
 			|| prop.name === 'on'
 			|| prop.name === 'model'
 			|| prop.name === 'bind'
-			|| prop.name === 'scope'
-			|| prop.name === 'data'
 		) {
 			continue;
 		}
@@ -72,9 +70,7 @@ function* generateIdentifier(
 			'template',
 			prop.loc.start.offset,
 			ctx.resolveCodeFeatures({
-				...codeFeatures.withoutHighlight,
-				// fix https://github.com/vuejs/language-tools/issues/1905
-				...codeFeatures.additionalCompletion,
+				...codeFeatures.withoutHighlightAndCompletion,
 				verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
 			})
 		)
@@ -178,7 +174,6 @@ function* generateValue(
 		options,
 		ctx,
 		prop,
-		exp,
-		ctx.codeFeatures.all
+		exp
 	);
 }

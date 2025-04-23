@@ -50,11 +50,10 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	if (options.template.ast) {
-		yield* generateTemplateChild(options, ctx, options.template.ast, undefined);
+		yield* generateTemplateChild(options, ctx, options.template.ast);
 	}
 
 	yield* generateStyleScopedClassReferences(ctx);
-	yield* ctx.generateAutoImportCompletion();
 	yield* ctx.generateHoistVariables();
 
 	const speicalTypes = [
@@ -140,18 +139,32 @@ function* generateTemplateRefs(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
-	yield `type __VLS_TemplateRefs = {${newLine}`;
-	for (const [name, { typeExp, offset }] of ctx.templateRefs) {
-		yield* generateObjectProperty(
-			options,
-			ctx,
-			name,
-			offset,
-			ctx.codeFeatures.navigationAndCompletion
-		);
-		yield `: ${typeExp},${newLine}`;
+	yield `type __VLS_TemplateRefs = {}`;
+	for (const [name, refs] of ctx.templateRefs) {
+		yield `${newLine}& `;
+		if (refs.length >= 2) {
+			yield `(`;
+		}
+		for (let i = 0; i < refs.length; i++) {
+			const { typeExp, offset } = refs[i];
+			if (i) {
+				yield ` | `;
+			}
+			yield `{ `;
+			yield* generateObjectProperty(
+				options,
+				ctx,
+				name,
+				offset,
+				ctx.codeFeatures.navigation
+			);
+			yield `: ${typeExp} }`;
+		}
+		if (refs.length >= 2) {
+			yield `)`;
+		}
 	}
-	yield `}${endOfLine}`;
+	yield endOfLine;
 	return `__VLS_TemplateRefs`;
 }
 

@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-plugin-pug",
-	"version": "3.0.0-alpha.0",
+	"version": "3.0.0-alpha.4",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -14,11 +14,11 @@
 	},
 	"dependencies": {
 		"@volar/source-map": "~2.4.11",
-		"volar-service-pug": "0.0.62"
+		"volar-service-pug": "0.0.64"
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.4",
 		"@vue/compiler-dom": "^3.5.0",
-		"@vue/language-core": "3.0.0-alpha.0"
+		"@vue/language-core": "3.0.0-alpha.4"
 	}
 }
